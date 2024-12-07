@@ -1,0 +1,39 @@
+{
+  "name": "travel_application",
+  "version": "1.0.0",
+  "main": "src/index.js",
+  "type": "module",
+  "license": "MIT",
+  "scripts": {
+    "dev": "cross-env NODE_ENV=development nodemon src/index.js",
+    "start": "cross-env NODE_ENV=production node src/index.js",
+    "lint:fix": "eslint --fix",
+    "prettier": "prettier --check **/*.{js,ts}",
+    "prettier:fix": "prettier --write **/*.{js,ts}"
+  },
+  "keywords": [],
+  "author": "",
+  "description": "",
+  "devDependencies": {
+    "@eslint/js": "^9.16.0",
+    "cross-env": "^7.0.3",
+    "eslint": "^9.16.0",
+    "globals": "^15.13.0",
+    "joi": "^17.13.3",
+    "nodemon": "^3.1.7",
+    "prettier": "^3.4.2"
+  },
+  "dependencies": {
+    "bcrypt": "^5.1.1",
+    "cookie-parser": "^1.4.7",
+    "cors": "^2.8.5",
+    "dotenv": "^16.4.7",
+    "express": "^4.21.2",
+    "helmet": "^8.0.0",
+    "jsonwebtoken": "^9.0.2",
+    "mongoose": "^8.8.4",
+    "morgan": "^1.10.0",
+    "validator": "^13.12.0",
+    "winston": "^3.17.0"
+  }
+}
