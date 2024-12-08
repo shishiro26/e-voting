@@ -2,7 +2,7 @@ import { UN_AUTHORIZED, INTERNAL_SERVER } from '../constants/index.js';
 
 import env from '../config/env.js';
 import AppError from './AppError.js';
-import { findUserByRefreshToken, removeRefreshTokensUser } from '../services/user.services.js';
+import { findUserByRefreshToken, removeRefreshTokensUser } from '../services/auth.services.js';
 
 import { decodeUser } from './user.js';
 

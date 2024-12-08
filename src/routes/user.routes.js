@@ -1,9 +1,12 @@
 import express from 'express';
-
-import { createUser } from '../controller/user.controller';
+import { isAdmin, verifyToken } from '../middlewares/auth.js';
+import { getStaff, getUsers } from '../controller/user.controller.js';
 
 const router = express.Router();
+//admin
+router.get('/get-users/', verifyToken, isAdmin, getUsers);
 
-router.post('/create-user', createUser);
+// staff 
+router.get('/get-staff/', verifyToken, isAdmin, getStaff);
 
 export default router;

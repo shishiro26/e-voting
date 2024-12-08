@@ -1,147 +1,104 @@
+import { INTERNAL_SERVER } from '../constants/index.js';
+import { queryUsers } from '../services/user.services.js';
 import AppError from '../utils/AppError.js';
-import { extractUser, generatePassword, generateTokenSet, checkPassword } from '../utils/user.js';
-import { getUserByEmail } from '../services/user.services.js';
 
-import { BAD_REQUEST, INTERNAL_SERVER, UN_AUTHORIZED } from '../constants/index.js';
-import env from '../config/env.js';
-import { handleRefreshTokenError, refreshTokenReuseDetection } from '../utils/auth.js';
-import {
-  assignRefreshToken,
-  removeRefreshTokenUser,
-  replaceRefreshTokenUser,
-  saveUser,
-} from '../services/user.services.js';
-
-export const createUser = async (req, res, next) => {
+export const getUsers = async (req, res, next) => {
   try {
-    const { firstName, lastName, email, role, password } = req.body;
-    const isUser = await getUserByEmail(email);
+    const { page = 1, limit = 10, sortBy, filter } = req.query;
 
-    if (isUser) {
-      return next(new AppError('User already exists', BAD_REQUEST));
-    }
+    const options = {
+      page: parseInt(page, 10),
+      limit: parseInt(limit, 10),
+      sort: sortBy,
+    };
 
-    const hashedPassword = await generatePassword(password);
-
-    const user = { firstName, lastName, email, role, password: hashedPassword };
-
-    saveUser(user)
-      .then((savedUser) => {
-        return res.status(201).send({
-          message: 'Account Created Successfully!',
-          data: savedUser,
-        });
-      })
-      .catch((error) => {
-        return next(new AppError('Something went wrong', INTERNAL_SERVER));
-      });
-  } catch (error) {
-    return next(new AppError('Something went wrong', INTERNAL_SERVER));
-  }
-};
-
-export const loginUser = async (req, res, next) => {
-  try {
-    const { email, password } = req.body;
-    const user = await getUserByEmail(email);
-
-    if (!user) {
-      return next(new AppError('User does not exist', BAD_REQUEST));
-    }
-
-    if (!(await checkPassword(password, user.password))) {
-      return next(new AppError('Email or Password is incorrect', BAD_REQUEST));
-    }
-
-    const { accessToken, refreshToken } = generateTokenSet({
-      id: user.id,
-      email: user.email,
-      role: user.role,
-    });
-
-    await assignRefreshToken(user._id, refreshToken);
-
-    res.cookie('refreshToken', refreshToken, {
-      maxAge: env.jwt.refreshExpirationDays * 24 * 60 * 60 * 1000,
-      secure: env.env === 'PRODUCTION' ? true : false,
-      httpOnly: true,
-      samesite: 'none',
-    });
+    const result = await queryUsers(filter, options);
 
     return res.status(200).send({
-      accessToken,
-      message: 'Logged In Successfully!',
+      page: result.page,
+      limit: result.limit,
+      total: result.total,
+      data: result,
     });
   } catch (error) {
-    console.log(error);
     return next(new AppError('Something went wrong', INTERNAL_SERVER));
   }
 };
 
-export const refreshTokenSets = async (req, res, next) => {
+export const getStaff = async (req, res, next) => {
   try {
-    const { refreshToken } = req.cookies;
+    const { page = 1, limit = 10, sortBy } = req.query;
 
-    if (!refreshToken) {
-      res.clearCookie('refreshToken');
-      return next(new AppError('No refresh token found', UN_AUTHORIZED));
-    }
+    const filter = { role: 'user ' };
 
-    const decodedUser = extractUser(refreshToken, env.jwt.refresh_secret);
-    req.user = decodedUser;
+    const options = {
+      page: parseInt(page, 10),
+      limit: parseInt(limit, 10),
+      sort: sortBy,
+    };
 
-    const isHacker = await refreshTokenReuseDetection(decodedUser, refreshToken, res);
-    if (isHacker) {
-      return next(new AppError('Potential breach detected', UN_AUTHORIZED));
-    }
+    const result = await queryUsers(filter, options);
 
-    const tokenSet = generateTokenSet({
-      id: decodedUser.id,
-      email: decodedUser.email,
-      role: decodedUser.role,
+    return res.status(200).send({
+      page: result.page,
+      limit: result.limit,
+      total: result.totalResults,
+      data: result.results,
     });
-
-    const updatedRefreshToken = await replaceRefreshTokenUser(
-      decodedUser.id,
-      refreshToken,
-      tokenSet.refreshToken
-    );
-    if (updatedRefreshToken) {
-      res.cookie('refreshToken', tokenSet.refreshToken, {
-        maxAge: env.jwt.refreshExpirationDays * 24 * 60 * 60 * 1000,
-        secure: env.env === 'PRODUCTION' ? true : false,
-        httpOnly: true,
-        samesite: 'none',
-      });
-
-      return res.status(201).send({
-        accessToken: tokenSet.accessToken,
-      });
-    }
   } catch (error) {
-    return handleRefreshTokenError(error, req, res);
+    return next(new AppError('Something went wrong', INTERNAL_SERVER));
   }
 };
 
-export const logOut = async (req, res, next) => {
+
+export const getAdmins = async (req, res, next) => {
   try {
-    res.clearCookie('refreshToken');
-    const { refreshToken } = req.cookies;
+    const { page = 1, limit = 10, sortBy } = req.query;
 
-    if (!refreshToken) {
-      return next(new AppError('No Refresh Token Found', UN_AUTHORIZED));
-    }
+    const filter = { role: 'admin' };
 
-    const decodedUser = extractUser(refreshToken, env.jwt.refresh_secret);
+    const options = {
+      page: parseInt(page, 10),
+      limit: parseInt(limit, 10),
+      sort: sortBy,
+    };
 
-    const isHacker = await refreshTokenReuseDetection(decodedUser, refreshToken, res);
-    if (isHacker) {
-      return next(new AppError('Potential breach detected', UN_AUTHORIZED));
-    }
+    const result = await queryUsers(filter, options);
 
-    await removeRefreshTokenUser(decodedUser.id, refreshToken);
-    return res.sendStatus(204);
+    return res.status(200).send({
+      page: result.page,
+      limit: result.limit,
+      total: result.totalResults,
+      data: result.results,
+    });
   } catch (error) {
-    return handleRefreshTokenError(error, req, res);
+    return next(new AppError('Something went wrong', INTERNAL_SERVER));
   }
-};
+}
+
+export const getOwners = async (req, res, next) => {
+  try {
+    const { page = 1, limit = 10, sortBy } = req.query;
+
+    const filter = { role: 'owner' };
+
+    const options = {
+      page: parseInt(page, 10),
+      limit: parseInt(limit, 10),
+      sort: sortBy,
+    };
+
+    const result = await queryUsers(filter, options);
+
+    return res.status(200).send({
+      page: result.page,
+      limit: result.limit,
+      total: result.totalResults,
+      data: result.results,
+    });
+  } catch (error) {
+    return next(new AppError('Something went wrong', INTERNAL_SERVER));
+  }
+}
+
+

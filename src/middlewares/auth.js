@@ -3,12 +3,11 @@ import { UN_AUTHENTICATED, UN_AUTHORIZED } from '../constants/index.js';
 import AppError from '../utils/AppError.js';
 import { extractUser } from '../utils/user.js';
 
-export const verifyToken = (req, res, next) => {
-  const token = req.headers['authorization'];
-
+export const verifyToken = async (req, res, next) => {
+  const token = req.headers['authorization'].split(' ')[1];
   if (!token) {
     next(
-      AppError(
+      new AppError(
         {
           message: 'No Authorization token found',
         },
@@ -18,7 +17,7 @@ export const verifyToken = (req, res, next) => {
   }
 
   try {
-    const decodedUser = extractUser(token, env.jwt.access_secret);
+    const decodedUser = await extractUser(token, env.jwt.access_secret);
     req.user = decodedUser;
     return next();
   } catch (error) {
@@ -31,4 +30,64 @@ export const verifyToken = (req, res, next) => {
       )
     );
   }
+};
+
+export const isUser = async (req, res, next) => {
+  if (req.user.role !== 'user') {
+    next(
+      new AppError(
+        {
+          message: 'You are not authorized to perform this action',
+        },
+        UN_AUTHORIZED
+      )
+    );
+  }
+
+  return next();
+};
+
+export const isAdmin = async (req, res, next) => {
+  if (req.user.role !== 'admin') {
+    next(
+      new AppError(
+        {
+          message: 'You are not authorized to perform this action',
+        },
+        UN_AUTHORIZED
+      )
+    );
+  }
+
+  return next();
+};
+
+export const isStaff = async (req, res, next) => {
+  if (req.user.role !== 'staff') {
+    next(
+      new AppError(
+        {
+          message: 'You are not authorized to perform this action',
+        },
+        UN_AUTHORIZED
+      )
+    );
+  }
+
+  return next();
+};
+
+export const isOwner = async (req, res, next) => {
+  if (req.user.role !== 'owner') {
+    next(
+      new AppError(
+        {
+          message: 'You are not authorized to perform this action',
+        },
+        UN_AUTHORIZED
+      )
+    );
+  }
+
+  return next();
 };
