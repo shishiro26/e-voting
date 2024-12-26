@@ -1,4 +1,3 @@
-import { token } from 'morgan';
 import User from '../models/user.model.js';
 
 export const getUserByEmail = async (email, fields = '') => {

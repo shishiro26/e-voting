@@ -13,7 +13,7 @@ import {
   removeEmailVerifyToken,
   removeVerifyToken,
 } from '../services/auth.services.js';
-import { registerSchema, verifyEmailSchema } from '../validations/auth.validation.js';
+import { loginSchema, registerSchema, verifyEmailSchema } from '../validations/auth.validation.js';
 import { checkTimeDifference, formatError, generateId, renderEmailEjs } from '../utils/helper.js';
 import { emailQueue, emailQueueName } from '../jobs/email.queue.js';
 
@@ -48,7 +48,7 @@ export const createUser = async (req, res, next) => {
         });
         await emailQueue.add(emailQueueName, {
           to: email,
-          subject: 'Verify your email address - Bus Booking',
+          subject: 'Verify your email address - Route Reserve',
           html: html,
         });
         return res.status(201).send({
@@ -70,8 +70,10 @@ export const createUser = async (req, res, next) => {
 
 export const loginUser = async (req, res, next) => {
   try {
-    const { email, password } = req.body;
-    const user = await getUserByEmail(email, 'id email role');
+    const { email, password } = loginSchema.parse(req.body);
+    console.log('email', email);
+    console.log('password', password);
+    const user = await getUserByEmail(email, '_id email role password');
 
     if (!user) {
       return next(new AppError('User does not exist', BAD_REQUEST));
@@ -101,6 +103,7 @@ export const loginUser = async (req, res, next) => {
       message: 'Logged In Successfully!',
     });
   } catch (error) {
+    console.log('error', error);
     return next(new AppError('Something went wrong', INTERNAL_SERVER));
   }
 };

@@ -28,6 +28,17 @@ export const registerSchema = z
     path: ['confirm_password'],
   });
 
+export const loginSchema = z.object({
+  email: z
+    .string({
+      message: 'Email is required',
+    })
+    .email({
+      message: 'Enter correct email',
+    }),
+  password: z.string({ message: 'Password is required' }),
+});
+
 export const verifyEmailSchema = z.object({
   email: z
     .string({
