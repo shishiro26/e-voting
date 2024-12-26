@@ -1,7 +1,8 @@
+import { token } from 'morgan';
 import User from '../models/user.model.js';
 
-export const getUserByEmail = async (email) => {
-  return User.findOne({ email: email });
+export const getUserByEmail = async (email, fields = '') => {
+  return User.findOne({ email: email }).select(fields);
 };
 
 export const saveUser = async (payload) => {
@@ -106,5 +107,51 @@ export const removeRefreshTokenUser = async (id, refreshToken) => {
     }
   );
 
+  return updatedUser;
+};
+
+export const assignEmailVerifyToken = async (id, token) => {
+  const updatedUser = await User.updateOne(
+    {
+      _id: id,
+    },
+    {
+      $set: {
+        email_verify_token: token,
+        token_send_at: new Date().toISOString(),
+      },
+    }
+  );
+  return updatedUser;
+};
+
+export const removeVerifyToken = async (id) => {
+  const updatedUser = await User.update(
+    {
+      _id: id,
+    },
+    {
+      $set: {
+        email_verify_token: null,
+        token_send_at: null,
+      },
+    }
+  );
+  return updatedUser;
+};
+
+export const removeEmailVerifyToken = async (id) => {
+  const updatedUser = await User.updateOne(
+    {
+      _id: id,
+    },
+    {
+      $set: {
+        email_verify_token: null,
+        isVerified: true,
+        token_send_at: null,
+      },
+    }
+  );
   return updatedUser;
 };

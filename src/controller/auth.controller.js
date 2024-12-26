@@ -10,23 +10,47 @@ import {
   replaceRefreshTokenUser,
   saveUser,
   getUserByEmail,
+  removeEmailVerifyToken,
+  removeVerifyToken,
 } from '../services/auth.services.js';
+import { registerSchema, verifyEmailSchema } from '../validations/auth.validation.js';
+import { checkTimeDifference, formatError, generateId, renderEmailEjs } from '../utils/helper.js';
+import { emailQueue, emailQueueName } from '../jobs/email.queue.js';
 
 export const createUser = async (req, res, next) => {
   try {
-    const { firstName, lastName, email, role, password } = req.body;
-    const isUser = await getUserByEmail(email);
+    const { firstName, lastName, email, role, password } = registerSchema.parse(req.body);
 
+    const isUser = await getUserByEmail(email);
     if (isUser) {
       return next(new AppError('User already exists', BAD_REQUEST));
     }
-
     const hashedPassword = await generatePassword(password);
+    const id = generateId();
+    const verify_token = await generatePassword(id);
+    const url = `${env.base_url}/verify/email/?email=${email}&token=${verify_token}`;
 
-    const user = { firstName, lastName, email, role, password: hashedPassword };
+    const user = {
+      firstName,
+      lastName,
+      email,
+      role,
+      password: hashedPassword,
+      email_verify_token: verify_token,
+      token_send_at: new Date().toISOString(),
+    };
 
     saveUser(user)
-      .then((savedUser) => {
+      .then(async (savedUser) => {
+        const html = await renderEmailEjs('emails/verify-mail', {
+          name: `${firstName} ${lastName}`,
+          url: url,
+        });
+        await emailQueue.add(emailQueueName, {
+          to: email,
+          subject: 'Verify your email address - Bus Booking',
+          html: html,
+        });
         return res.status(201).send({
           message: 'Account Created Successfully!',
           data: savedUser,
@@ -36,6 +60,10 @@ export const createUser = async (req, res, next) => {
         return next(new AppError('Something went wrong', INTERNAL_SERVER));
       });
   } catch (error) {
+    if (error instanceof Error) {
+      const error = formatError(error);
+      return next(new AppError(error, BAD_REQUEST));
+    }
     return next(new AppError('Something went wrong', INTERNAL_SERVER));
   }
 };
@@ -43,7 +71,7 @@ export const createUser = async (req, res, next) => {
 export const loginUser = async (req, res, next) => {
   try {
     const { email, password } = req.body;
-    const user = await getUserByEmail(email);
+    const user = await getUserByEmail(email, 'id email role');
 
     if (!user) {
       return next(new AppError('User does not exist', BAD_REQUEST));
@@ -73,7 +101,6 @@ export const loginUser = async (req, res, next) => {
       message: 'Logged In Successfully!',
     });
   } catch (error) {
-    console.log(error);
     return next(new AppError('Something went wrong', INTERNAL_SERVER));
   }
 };
@@ -143,5 +170,31 @@ export const logOut = async (req, res, next) => {
     return res.sendStatus(204);
   } catch (error) {
     return handleRefreshTokenError(error, req, res);
+  }
+};
+
+export const verifyEmail = async (req, res, next) => {
+  try {
+    const { email, token } = verifyEmailSchema.parse(req.query);
+    const user = await getUserByEmail(email, '_id email email_verify_token token_send_at');
+    const token_gap = checkTimeDifference(user.token_send_at);
+
+    if (token_gap > 86400000) {
+      await removeVerifyToken(user._id);
+      return next(new AppError('Token expired', BAD_REQUEST));
+    }
+
+    if (user) {
+      if (token !== user.email_verify_token) {
+        return next(new AppError('Invalid Token', BAD_REQUEST));
+      }
+
+      await removeEmailVerifyToken(user._id, token);
+
+      return res.sendStatus(200);
+    }
+  } catch (error) {
+    console.log('error', error);
+    return next(new AppError('Something went wrong', INTERNAL_SERVER));
   }
 };

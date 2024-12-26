@@ -32,6 +32,22 @@ const userSchema = mongoose.Schema(
       trim: true,
       private: true,
     },
+    isVerified: {
+      type: Boolean,
+      default: false,
+    },
+    email_verify_token: {
+      type: String,
+      private: true,
+    },
+    password_reset_token: {
+      type: String,
+      private: true,
+    },
+    token_send_at: {
+      type: Date,
+      private: true,
+    },
     refreshToken: [],
   },
   {
