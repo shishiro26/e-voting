@@ -1,9 +1,7 @@
 import IORedis from 'ioredis';
 import env from './env.js';
 
-export const redisConnection = new IORedis({
-  host: env.redis.host,
-  port: env.redis.port,
+export const redisConnection = new IORedis(env.redis.host, {
   maxLoadingRetryTime: null,
   maxRetriesPerRequest: null,
 });
