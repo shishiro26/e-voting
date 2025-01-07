@@ -91,6 +91,13 @@ export const loginUser = async (req, res, next) => {
 
     await assignRefreshToken(user._id, refreshToken);
 
+    res.cookie('accessToken', accessToken, {
+      maxAge: env.jwt.accessExpirationMinutes * 60 * 1000,
+      secure: env.env === 'PRODUCTION' ? true : false,
+      httpOnly: true,
+      samesite: 'none',
+    });
+
     res.cookie('refreshToken', refreshToken, {
       maxAge: env.jwt.refreshExpirationDays * 24 * 60 * 60 * 1000,
       secure: env.env === 'PRODUCTION' ? true : false,
@@ -98,10 +105,7 @@ export const loginUser = async (req, res, next) => {
       samesite: 'none',
     });
 
-    return res.status(200).send({
-      accessToken,
-      message: 'Logged In Successfully!',
-    });
+    return res.sendStatus(200);
   } catch (error) {
     console.log('error', error);
     return next(new AppError('Something went wrong', INTERNAL_SERVER));
@@ -137,6 +141,13 @@ export const refreshTokenSets = async (req, res, next) => {
       tokenSet.refreshToken
     );
     if (updatedRefreshToken) {
+      res.cookie('accessToken', tokenSet.accessToken, {
+        maxAge: env.jwt.accessExpirationMinutes * 60 * 1000,
+        secure: env.env === 'PRODUCTION' ? true : false,
+        httpOnly: true,
+        samesite: 'none',
+      });
+
       res.cookie('refreshToken', tokenSet.refreshToken, {
         maxAge: env.jwt.refreshExpirationDays * 24 * 60 * 60 * 1000,
         secure: env.env === 'PRODUCTION' ? true : false,
@@ -144,9 +155,7 @@ export const refreshTokenSets = async (req, res, next) => {
         samesite: 'none',
       });
 
-      return res.status(201).send({
-        accessToken: tokenSet.accessToken,
-      });
+      return res.sendStatus(201);
     }
   } catch (error) {
     return handleRefreshTokenError(error, req, res);
@@ -155,6 +164,7 @@ export const refreshTokenSets = async (req, res, next) => {
 
 export const logOut = async (req, res, next) => {
   try {
+    res.clearCookie('accessToken');
     res.clearCookie('refreshToken');
     const { refreshToken } = req.cookies;
 

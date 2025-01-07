@@ -1,5 +1,9 @@
 import User from '../models/user.model.js';
 
+export const getUserById = async (id, fields = '') => {
+  return User.findById(id).select(fields);
+};
+
 export const getUserByEmail = async (email, fields = '') => {
   return User.findOne({ email: email }).select(fields);
 };

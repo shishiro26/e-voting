@@ -4,7 +4,7 @@ import AppError from '../utils/AppError.js';
 import { extractUser } from '../utils/user.js';
 
 export const verifyToken = async (req, res, next) => {
-  const token = req.headers['authorization'].split(' ')[1];
+  const token = req.cookies.accessToken;
   if (!token) {
     next(
       new AppError(
@@ -18,6 +18,7 @@ export const verifyToken = async (req, res, next) => {
 
   try {
     const decodedUser = await extractUser(token, env.jwt.access_secret);
+    console.log('decodedUser', decodedUser);
     req.user = decodedUser;
     return next();
   } catch (error) {

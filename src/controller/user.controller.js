@@ -1,4 +1,5 @@
 import { INTERNAL_SERVER } from '../constants/index.js';
+import { getUserById } from '../services/auth.services.js';
 import { queryUsers } from '../services/user.services.js';
 import AppError from '../utils/AppError.js';
 
@@ -21,6 +22,7 @@ export const getUsers = async (req, res, next) => {
       data: result,
     });
   } catch (error) {
+    console.log(error);
     return next(new AppError('Something went wrong', INTERNAL_SERVER));
   }
 };
@@ -50,7 +52,6 @@ export const getStaff = async (req, res, next) => {
   }
 };
 
-
 export const getAdmins = async (req, res, next) => {
   try {
     const { page = 1, limit = 10, sortBy } = req.query;
@@ -74,7 +75,7 @@ export const getAdmins = async (req, res, next) => {
   } catch (error) {
     return next(new AppError('Something went wrong', INTERNAL_SERVER));
   }
-}
+};
 
 export const getOwners = async (req, res, next) => {
   try {
@@ -99,6 +100,16 @@ export const getOwners = async (req, res, next) => {
   } catch (error) {
     return next(new AppError('Something went wrong', INTERNAL_SERVER));
   }
-}
+};
 
-
+export const getUserDetails = async (req, res, next) => {
+  try {
+    const { id } = req.user;
+    const user = await getUserById(id, 'firstName lastName email role');
+    return res.status(200).send({
+      data: user,
+    });
+  } catch (error) {
+    return next(new AppError('Something went wrong', INTERNAL_SERVER));
+  }
+};
