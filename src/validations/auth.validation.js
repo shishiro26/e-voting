@@ -2,13 +2,13 @@ import * as z from 'zod';
 
 export const registerSchema = z
   .object({
-    firstName: z
+    first_name: z
       .string({
         message: 'Name is required',
       })
       .min(2)
       .max(50),
-    lastName: z.string({
+    last_name: z.string({
       message: 'Name is required',
     }),
     email: z

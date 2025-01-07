@@ -1,23 +1,23 @@
-import mongoose from 'mongoose';
-
 import app from './config/app.js';
 import env from './config/env.js';
 import logger from './config/logger.js';
+import { PrismaClient } from '@prisma/client';
 
 let server = null;
-
-mongoose
-  .connect(env.mongo.uri)
-  .then(() => {
-    logger.info('MongoDB connected');
+const prisma = new PrismaClient();
+const startServer = async () => {
+  try {
+    await prisma.$connect();
+    logger.info('Prisma connected to database');
 
     server = app.listen(env.port, () => {
       logger.info(`Server started at http://localhost:${env.port}`);
     });
-  })
-  .catch((err) => {
-    logger.error(`An error occurred connecting to DB: ${err}`);
-  });
+  } catch (err) {
+    logger.error(`An error occurred connecting to DB: ${err.message}`);
+    process.exit(1);
+  }
+};
 
 process.on('uncaughtException', (error) => {
   logger.error(`Uncaught Exception: ${error.message}`);
@@ -29,7 +29,7 @@ process.on('unhandledRejection', (reason, promise) => {
   exitHandler();
 });
 
-const exitHandler = () => {
+const exitHandler = async () => {
   if (server) {
     server.close(() => {
       logger.info('Server closed');
@@ -38,4 +38,14 @@ const exitHandler = () => {
   } else {
     process.exit(1);
   }
+
+  try {
+    await prisma.$disconnect();
+    logger.info('Prisma client disconnected');
+  } catch (err) {
+    logger.error(`Error disconnecting Prisma: ${err.message}`);
+  }
 };
+
+startServer();
+export default prisma;

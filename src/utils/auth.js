@@ -6,10 +6,11 @@ import { findUserByRefreshToken, removeRefreshTokensUser } from '../services/aut
 
 import { decodeUser } from './user.js';
 
-export const refreshTokenReuseDetection = async (decodedUser, refreshToken, res) => {
+export const refreshTokenReuseDetection = async (decodedUser, refreshToken, res, next) => {
+  console.log('decodedUser1', decodedUser);
   const refreshTokenFound = await findUserByRefreshToken(decodedUser.id, refreshToken);
 
-  if (!refreshToken) {
+  if (!refreshTokenFound) {
     await removeRefreshTokensUser(decodedUser.id);
     res.clearCookie('refreshToken');
     next(
@@ -25,13 +26,17 @@ export const refreshTokenReuseDetection = async (decodedUser, refreshToken, res)
   return false;
 };
 
-export const handleRefreshTokenError = async (error, req, res) => {
+export const handleRefreshTokenError = async (error, req, res, next) => {
   const { refreshToken } = req.cookies;
   let updatedUser = null;
 
   res.clearCookie('refreshToken');
 
   const decodedUser = decodeUser(refreshToken, env.jwt.refresh_secret);
+
+  if (decodeUser) {
+    updatedUser = await removeRefreshTokensUser(decodeUser.id, refreshToken);
+  }
 
   if (error?.message === 'jwt expired') {
     if (updatedUser) {

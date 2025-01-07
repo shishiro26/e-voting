@@ -19,7 +19,7 @@ import { emailQueue, emailQueueName } from '../jobs/email.queue.js';
 
 export const createUser = async (req, res, next) => {
   try {
-    const { firstName, lastName, email, role, password } = registerSchema.parse(req.body);
+    const { first_name, last_name, email, role, password } = registerSchema.parse(req.body);
 
     const isUser = await getUserByEmail(email);
     if (isUser) {
@@ -31,8 +31,8 @@ export const createUser = async (req, res, next) => {
     const url = `${env.base_url}/verify/email/?email=${email}&token=${verify_token}`;
 
     const user = {
-      firstName,
-      lastName,
+      first_name,
+      last_name,
       email,
       role,
       password: hashedPassword,
@@ -43,7 +43,7 @@ export const createUser = async (req, res, next) => {
     saveUser(user)
       .then(async (savedUser) => {
         const html = await renderEmailEjs('emails/verify-mail', {
-          name: `${firstName} ${lastName}`,
+          name: `${first_name} ${last_name}`,
           url: url,
         });
         await emailQueue.add(emailQueueName, {
@@ -60,6 +60,7 @@ export const createUser = async (req, res, next) => {
         return next(new AppError('Something went wrong', INTERNAL_SERVER));
       });
   } catch (error) {
+    console.log('I am in this', error);
     if (error instanceof Error) {
       const error = formatError(error);
       return next(new AppError(error, BAD_REQUEST));
@@ -73,7 +74,7 @@ export const loginUser = async (req, res, next) => {
     const { email, password } = loginSchema.parse(req.body);
     console.log('email', email);
     console.log('password', password);
-    const user = await getUserByEmail(email, '_id email role password');
+    const user = await getUserByEmail(email, 'id email role password');
 
     if (!user) {
       return next(new AppError('User does not exist', BAD_REQUEST));
@@ -89,7 +90,7 @@ export const loginUser = async (req, res, next) => {
       role: user.role,
     });
 
-    await assignRefreshToken(user._id, refreshToken);
+    await assignRefreshToken(user.id, refreshToken);
 
     res.cookie('accessToken', accessToken, {
       maxAge: env.jwt.accessExpirationMinutes * 60 * 1000,
@@ -121,13 +122,16 @@ export const refreshTokenSets = async (req, res, next) => {
       return next(new AppError('No refresh token found', UN_AUTHORIZED));
     }
 
-    const decodedUser = extractUser(refreshToken, env.jwt.refresh_secret);
+    const decodedUser = await extractUser(refreshToken, env.jwt.refresh_secret);
     req.user = decodedUser;
+    console.log('decodedUser', decodedUser);
 
-    const isHacker = await refreshTokenReuseDetection(decodedUser, refreshToken, res);
+    const isHacker = await refreshTokenReuseDetection(decodedUser, refreshToken, res, next);
     if (isHacker) {
       return next(new AppError('Potential breach detected', UN_AUTHORIZED));
     }
+
+    console.log('I am in this 4');
 
     const tokenSet = generateTokenSet({
       id: decodedUser.id,
@@ -135,11 +139,15 @@ export const refreshTokenSets = async (req, res, next) => {
       role: decodedUser.role,
     });
 
+    console.log('tokenSet', tokenSet);
+
     const updatedRefreshToken = await replaceRefreshTokenUser(
       decodedUser.id,
       refreshToken,
       tokenSet.refreshToken
     );
+    console.log('I am in this 4');
+
     if (updatedRefreshToken) {
       res.cookie('accessToken', tokenSet.accessToken, {
         maxAge: env.jwt.accessExpirationMinutes * 60 * 1000,
@@ -158,7 +166,8 @@ export const refreshTokenSets = async (req, res, next) => {
       return res.sendStatus(201);
     }
   } catch (error) {
-    return handleRefreshTokenError(error, req, res);
+    console.log('The error in this', error);
+    return handleRefreshTokenError(error, req, res, next);
   }
 };
 
@@ -172,7 +181,7 @@ export const logOut = async (req, res, next) => {
       return next(new AppError('No Refresh Token Found', UN_AUTHORIZED));
     }
 
-    const decodedUser = extractUser(refreshToken, env.jwt.refresh_secret);
+    const decodedUser = await extractUser(refreshToken, env.jwt.refresh_secret);
 
     const isHacker = await refreshTokenReuseDetection(decodedUser, refreshToken, res);
     if (isHacker) {
@@ -182,18 +191,18 @@ export const logOut = async (req, res, next) => {
     await removeRefreshTokenUser(decodedUser.id, refreshToken);
     return res.sendStatus(204);
   } catch (error) {
-    return handleRefreshTokenError(error, req, res);
+    return handleRefreshTokenError(error, req, res, next);
   }
 };
 
 export const verifyEmail = async (req, res, next) => {
   try {
     const { email, token } = verifyEmailSchema.parse(req.query);
-    const user = await getUserByEmail(email, '_id email email_verify_token token_send_at');
+    const user = await getUserByEmail(email, 'id email email_verify_token token_send_at');
     const token_gap = checkTimeDifference(user.token_send_at);
 
     if (token_gap > 86400000) {
-      await removeVerifyToken(user._id);
+      await removeVerifyToken(user.id);
       return next(new AppError('Token expired', BAD_REQUEST));
     }
 
@@ -202,7 +211,7 @@ export const verifyEmail = async (req, res, next) => {
         return next(new AppError('Invalid Token', BAD_REQUEST));
       }
 
-      await removeEmailVerifyToken(user._id, token);
+      await removeEmailVerifyToken(user.id, token);
 
       return res.sendStatus(200);
     }

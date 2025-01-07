@@ -105,7 +105,7 @@ export const getOwners = async (req, res, next) => {
 export const getUserDetails = async (req, res, next) => {
   try {
     const { id } = req.user;
-    const user = await getUserById(id, 'firstName lastName email role');
+    const user = await getUserById(id, 'first_name last_name email role');
     return res.status(200).send({
       data: user,
     });

@@ -3,12 +3,12 @@ import paginate from '../plugins/paginate.js';
 
 const userSchema = mongoose.Schema(
   {
-    firstName: {
+    first_name: {
       type: String,
       required: true,
       trim: true,
     },
-    lastName: {
+    last_name: {
       type: String,
       required: true,
       trim: true,
