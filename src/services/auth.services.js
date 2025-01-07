@@ -1,5 +1,4 @@
-import User from '../models/user.model.js';
-import prisma from '../index.js';
+import prisma from '../config/db.js';
 
 export const getUserById = async (id, fields = '') => {
   return await prisma.user.findUnique({

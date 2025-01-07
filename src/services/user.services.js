@@ -1,7 +1,6 @@
-  import User from '../models/user.model.js';
+import { paginate } from '../plugins/paginate.js';
 
-  export const queryUsers = async (filter, options) => {
-    const users = await User.paginate(filter, options);
-    return users;
-  };
-
+export const queryUsers = async (filter, options) => {
+  const users = await paginate('user', filter, options);
+  return users;
+};

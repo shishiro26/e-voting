@@ -1,10 +1,8 @@
 import app from './config/app.js';
 import env from './config/env.js';
 import logger from './config/logger.js';
-import { PrismaClient } from '@prisma/client';
-
+import prisma from './config/db.js';
 let server = null;
-const prisma = new PrismaClient();
 const startServer = async () => {
   try {
     await prisma.$connect();
