@@ -7,7 +7,6 @@ export const envSchema = z
   .object({
     NODE_ENV: z.enum(['production', 'development', 'test']),
     PORT: z.coerce.number().positive(),
-    MONGO_URI: z.string().describe('Mongo DB URI'),
     JWT_ACCESS_SECRET: z.string().describe('JWT secret key'),
     JWT_REFRESH_SECRET: z.string().describe('JWT secret key'),
     JWT_ACCESS_EXPIRATION_MINUTES: z.coerce
@@ -52,9 +51,6 @@ const env = parsedEnv.data;
 export default {
   env: env.NODE_ENV,
   port: env.PORT,
-  mongo: {
-    uri: env.MONGO_URI,
-  },
   jwt: {
     access_secret: env.JWT_ACCESS_SECRET,
     refresh_secret: env.JWT_REFRESH_SECRET,
