@@ -15,9 +15,18 @@ datasource db {
 
 enum Role {
   ADMIN
-  USER
-  STAFF
-  OWNER
+  VOTER
+}
+
+model College {
+  id           Int      @id @default(autoincrement())
+  created_at   DateTime @default(now())
+  updated_at   DateTime @updatedAt
+  name         String   @unique @db.VarChar(255)
+  suffix_email String   @db.VarChar(255)
+  Users        User[]
+
+  @@map("colleges")
 }
 
 model User {
@@ -27,13 +36,21 @@ model User {
   first_name           String         @db.VarChar(255)
   last_name            String         @db.VarChar(255)
   email                String         @unique
-  role                 Role           @default(USER)
+  role                 Role           @default(VOTER)
   password             String         @db.VarChar(255)
   is_verified          Boolean        @default(false)
   email_verify_token   String?        @db.VarChar(255)
   password_reset_token String?        @db.VarChar(255)
   token_send_at        DateTime?
   refresh_token        RefreshToken[]
+  Election             Election?      @relation(fields: [election_id], references: [id])
+  election_id          Int?
+  Vote                 Vote[]
+  College              College?       @relation(fields: [college_id], references: [id])
+  college_id           Int?
+
+  @@index([email], name: "email")
+  @@map("users")
 }
 
 model RefreshToken {
@@ -43,4 +60,44 @@ model RefreshToken {
   updated_at    DateTime @updatedAt
   User          User?    @relation(fields: [user_id], references: [id])
   user_id       Int?
+
+  @@map("refresh_token")
+}
+
+model Election {
+  id          Int        @id @default(autoincrement())
+  created_at  DateTime   @default(now())
+  updated_at  DateTime   @updatedAt
+  title       String     @db.VarChar(255)
+  description String     @db.Text
+  start_date  DateTime
+  end_date    DateTime
+  status      Boolean    @default(false)
+  candidates  User[]
+  Comments    Comments[]
+  Vote        Vote[]
+}
+
+model Vote {
+  id          Int      @id @default(autoincrement())
+  created_at  DateTime @default(now())
+  election_id Int
+  user_id     Int
+  Election    Election @relation(fields: [election_id], references: [id])
+  User        User     @relation(fields: [user_id], references: [id])
+
+  @@index([election_id], name: "election_id")
+  @@index([user_id], name: "user_id")
+  @@map("votes")
+}
+
+model Comments {
+  id          Int      @id @default(autoincrement())
+  comment     String   @db.Text
+  created_at  DateTime @default(now())
+  election_id Int
+  Election    Election @relation(fields: [election_id], references: [id])
+
+  @@index([election_id], name: "election_id")
+  @@map("comments")
 }

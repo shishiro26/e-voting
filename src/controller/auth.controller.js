@@ -16,19 +16,33 @@ import {
 import { loginSchema, registerSchema, verifyEmailSchema } from '../validations/auth.validation.js';
 import { checkTimeDifference, formatError, generateId, renderEmailEjs } from '../utils/helper.js';
 import { emailQueue, emailQueueName } from '../jobs/email.queue.js';
+import { getCollegeByName } from '../services/college.services.js';
 
 export const createUser = async (req, res, next) => {
   try {
-    const { first_name, last_name, email, role, password } = registerSchema.parse(req.body);
+    const { first_name, last_name, email, role, password, college_name } = registerSchema.parse(
+      req.body
+    );
+
+    const college = await getCollegeByName(college_name, 'id name suffix_email');
+
+    if (!college) {
+      return next(new AppError('College does not exist', BAD_REQUEST));
+    }
 
     const isUser = await getUserByEmail(email);
     if (isUser) {
       return next(new AppError('User already exists', BAD_REQUEST));
     }
+
+    if (email.split('@')[1] !== college.suffix_email) {
+      return next(new AppError('Email does not belong to the college', BAD_REQUEST));
+    }
+
     const hashedPassword = await generatePassword(password);
     const id = generateId();
     const verify_token = await generatePassword(id);
-    const url = `${env.base_url}/verify/email/?email=${email}&token=${verify_token}`;
+    const url = `${env.base_url}/api/v1/auth/verify/email/?email=${email}&token=${verify_token}`;
 
     const user = {
       first_name,

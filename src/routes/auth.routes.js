@@ -15,7 +15,7 @@ router.post('/sign-up', createUser);
 router.post('/login', loginUser);
 router.get('/refresh', refreshTokenSets);
 router.get('/log-out', logOut);
-router.post('/verify/email/', verifyEmail);
+router.get('/verify/email/', verifyEmail);
 router.get('/get-user/', verifyToken, getUserDetails);
 
 export default router;

@@ -18,6 +18,7 @@ export const registerSchema = z
       .email({
         message: 'Enter correct email',
       }),
+    college_name: z.string({ message: 'College is required' }).trim(),
     password: z
       .string({ message: 'Password is required' })
       .min(6, { message: 'Password must be 3 characters long' }),
@@ -37,6 +38,11 @@ export const loginSchema = z.object({
       message: 'Enter correct email',
     }),
   password: z.string({ message: 'Password is required' }),
+});
+
+export const addCollegeSchema = z.object({
+  name: z.string({ message: 'Name is required' }).trim(),
+  suffix_email: z.string({ message: 'Suffix Email is required' }),
 });
 
 export const verifyEmailSchema = z.object({
