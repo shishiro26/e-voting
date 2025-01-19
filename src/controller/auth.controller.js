@@ -22,6 +22,7 @@ import {
 import { checkTimeDifference, formatError, generateId, renderEmailEjs } from '../utils/helper.js';
 import { emailQueue, emailQueueName } from '../jobs/email.queue.js';
 import { getCollegeByName } from '../services/college.services.js';
+import logger from '../config/logger.js';
 
 export const createUser = async (req, res, next) => {
   try {
@@ -80,11 +81,11 @@ export const createUser = async (req, res, next) => {
         return next(new AppError('Something went wrong', INTERNAL_SERVER));
       });
   } catch (error) {
-    console.log('I am in this', error);
     if (error instanceof Error) {
       const error = formatError(error);
       return next(new AppError(error, BAD_REQUEST));
     }
+    logger.error('Error while creating User', error);
     return next(new AppError('Something went wrong', INTERNAL_SERVER));
   }
 };
@@ -92,9 +93,7 @@ export const createUser = async (req, res, next) => {
 export const loginUser = async (req, res, next) => {
   try {
     const { email, password } = loginSchema.parse(req.body);
-    console.log('email', email);
-    console.log('password', password);
-    const user = await getUserByEmail(email, 'id email role password');
+    const user = await getUserByEmail(email, 'id email role password college_id');
 
     if (!user) {
       return next(new AppError('User does not exist', BAD_REQUEST));
@@ -108,6 +107,7 @@ export const loginUser = async (req, res, next) => {
       id: user.id,
       email: user.email,
       role: user.role,
+      college_id: user.college_id,
     });
 
     await assignRefreshToken(user.id, refreshToken);
@@ -128,7 +128,7 @@ export const loginUser = async (req, res, next) => {
 
     return res.sendStatus(200);
   } catch (error) {
-    console.log('error', error);
+    logger.error('Error while logging in', error);
     return next(new AppError('Something went wrong', INTERNAL_SERVER));
   }
 };
@@ -144,29 +144,24 @@ export const refreshTokenSets = async (req, res, next) => {
 
     const decodedUser = await extractUser(refreshToken, env.jwt.refresh_secret);
     req.user = decodedUser;
-    console.log('decodedUser', decodedUser);
 
     const isHacker = await refreshTokenReuseDetection(decodedUser, refreshToken, res, next);
     if (isHacker) {
       return next(new AppError('Potential breach detected', UN_AUTHORIZED));
     }
 
-    console.log('I am in this 4');
-
     const tokenSet = generateTokenSet({
       id: decodedUser.id,
       email: decodedUser.email,
       role: decodedUser.role,
+      college_id: decodedUser.college_id,
     });
-
-    console.log('tokenSet', tokenSet);
 
     const updatedRefreshToken = await replaceRefreshTokenUser(
       decodedUser.id,
       refreshToken,
       tokenSet.refreshToken
     );
-    console.log('I am in this 4');
 
     if (updatedRefreshToken) {
       res.cookie('accessToken', tokenSet.accessToken, {
@@ -186,7 +181,7 @@ export const refreshTokenSets = async (req, res, next) => {
       return res.sendStatus(201);
     }
   } catch (error) {
-    console.log('The error in this', error);
+    logger.error('Error while generating the refresh token sets', error);
     return handleRefreshTokenError(error, req, res, next);
   }
 };
@@ -222,6 +217,7 @@ export const createAdmin = async (req, res, next) => {
           id: updatedUser.id,
           email: updatedUser.email,
           role: updatedUser.role,
+          college_id: updatedUser.college_id,
         });
 
         await assignRefreshToken(updatedUser.id, refreshToken);
@@ -244,7 +240,8 @@ export const createAdmin = async (req, res, next) => {
       }
     }
   } catch (error) {
-    console.log('error', error);
+    console.log('Error in this', error);
+    logger.error('Error while creating the admin', error);
     return next(new AppError('Something went wrong', INTERNAL_SERVER));
   }
 };

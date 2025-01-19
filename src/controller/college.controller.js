@@ -6,11 +6,11 @@ import { formatError, generatePassword } from '../utils/user.js';
 import env from '../config/env.js';
 import { emailQueue, emailQueueName } from '../jobs/email.queue.js';
 import { INTERNAL_SERVER, BAD_REQUEST } from '../constants/index.js';
+import logger from '../config/logger.js';
 
 export const addCollege = async (req, res, next) => {
   try {
     const { name, suffix_email, email } = addCollegeSchema.parse(req.body);
-    console.log('name', name);
 
     const existingCollege = await getCollegeByName(name);
     if (existingCollege) {
@@ -32,7 +32,6 @@ export const addCollege = async (req, res, next) => {
         name: name,
         url: url,
       });
-      console.log(html);
 
       emailQueue.add(emailQueueName, {
         to: email,
@@ -46,7 +45,7 @@ export const addCollege = async (req, res, next) => {
       });
     });
   } catch (error) {
-    console.log('Error during addCollege:', error);
+    logger.error('Error during addCollege:', error);
 
     if (error instanceof Error) {
       const formattedError = formatError(error);

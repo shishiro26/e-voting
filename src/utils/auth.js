@@ -7,7 +7,6 @@ import { findUserByRefreshToken, removeRefreshTokensUser } from '../services/aut
 import { decodeUser } from './user.js';
 
 export const refreshTokenReuseDetection = async (decodedUser, refreshToken, res, next) => {
-  console.log('decodedUser1', decodedUser);
   const refreshTokenFound = await findUserByRefreshToken(decodedUser.id, refreshToken);
 
   if (!refreshTokenFound) {

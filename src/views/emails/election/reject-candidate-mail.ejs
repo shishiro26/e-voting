@@ -1,0 +1,20 @@
+<%- include('../partials/header', { websiteName: 'E-Voting' }) %>
+
+<h2>Hello <%= candidateName %>,</h2>
+    <p>We regret to inform you that your application to run for election in the upcoming E-voting election has been rejected.</p>
+    <p>While we appreciate your interest and efforts in participating, the election administrators have decided not to proceed with your candidacy at this time.</p>
+    
+    <p>If you have any questions or concerns regarding this decision, please feel free to reach out to us at <a href="mailto:<%= supportEmail %>"><%= supportEmail %></a>.</p>
+
+    <p>Thank you for your understanding, and we encourage you to stay involved in future opportunities with E-voting.</p>
+
+    <p>Best regards,</p>
+    <p>The E-voting Team</p>
+
+<%- include('../partials/footer', { 
+    websiteDomain: 'localhost:com', 
+    currentYear: new Date().getFullYear(), 
+    websiteName: 'E-Voting',
+    supportEmail: 'support@evoting.com',
+  }) %>
+  

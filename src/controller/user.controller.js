@@ -1,3 +1,4 @@
+import logger from '../config/logger.js';
 import { INTERNAL_SERVER } from '../constants/index.js';
 import { getUserById } from '../services/auth.services.js';
 import { queryUsers } from '../services/user.services.js';
@@ -22,7 +23,7 @@ export const getUsers = async (req, res, next) => {
       data: result,
     });
   } catch (error) {
-    console.log(error);
+    logger.error('Error while fetching users', error);
     return next(new AppError('Something went wrong', INTERNAL_SERVER));
   }
 };

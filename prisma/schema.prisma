@@ -13,17 +13,24 @@ enum role {
   voter
 }
 
+enum status {
+  pending
+  approved
+  rejected
+}
+
 model college {
-  id                 Int       @id @default(autoincrement())
-  created_at         DateTime  @default(now())
-  updated_at         DateTime  @updatedAt
-  name               String    @unique @db.VarChar(255)
-  suffix_email       String    @unique @db.VarChar(255)
-  email              String    @unique @db.VarChar(255)
-  is_verified        Boolean   @default(false)
-  email_verify_token String?   @db.VarChar(255)
+  id                 Int        @id @default(autoincrement())
+  created_at         DateTime   @default(now())
+  updated_at         DateTime   @updatedAt
+  name               String     @unique @db.VarChar(255)
+  suffix_email       String     @unique @db.VarChar(255)
+  email              String     @unique @db.VarChar(255)
+  is_verified        Boolean    @default(false)
+  email_verify_token String?    @db.VarChar(255)
   token_send_at      DateTime?
   users              user[]
+  Election           Election[]
 
   @@map("colleges")
 }
@@ -44,6 +51,8 @@ model user {
   refresh_token        refresh_token[]
   college_id           Int
   college              college?        @relation(fields: [college_id], references: [id])
+  Vote                 Vote[]
+  Candidate            Candidate[]
 
   @@index([email], name: "email")
   @@map("users")
@@ -58,4 +67,43 @@ model refresh_token {
   user_id       Int?
 
   @@map("refresh_token")
+}
+
+model Election {
+  id          Int         @id @default(autoincrement())
+  title       String      @db.VarChar(255)
+  created_at  DateTime    @default(now())
+  updated_at  DateTime    @updatedAt
+  description String      @db.Text
+  start_date  DateTime
+  end_date    DateTime
+  college_id  Int
+  college     college     @relation(fields: [college_id], references: [id])
+  Vote        Vote[]
+  Candidate   Candidate[]
+
+  @@map("elections")
+}
+
+model Candidate {
+  id          Int      @id @default(autoincrement())
+  created_at  DateTime @default(now())
+  updated_at  DateTime @updatedAt
+  user_id     Int
+  approved    status  @default(pending)
+  tagline     String   @db.VarChar(255)
+  image       String?  @db.VarChar(255)
+  user        user     @relation(fields: [user_id], references: [id])
+  election_id Int
+  election    Election @relation(fields: [election_id], references: [id])
+}
+
+model Vote {
+  id          Int      @id @default(autoincrement())
+  created_at  DateTime @default(now())
+  updated_at  DateTime @updatedAt
+  user_id     Int
+  user        user     @relation(fields: [user_id], references: [id])
+  election_id Int
+  election    Election @relation(fields: [election_id], references: [id])
 }

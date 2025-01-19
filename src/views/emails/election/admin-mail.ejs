@@ -1,0 +1,35 @@
+<%- include('../partials/header', { websiteName: 'E-Voting' }) %>
+<h2>Hello Admin,</h2>
+<p>
+  You have a pending candidate application that requires your approval for the upcoming election.
+</p>
+
+<h3>Candidate Information:</h3>
+<p><strong>Name:</strong> <%= candidateName %></p>
+<p><strong>Email:</strong> <%= candidateEmail %></p>
+<p><strong>Tagline:</strong> <%= candidateTagline %></p>
+
+<p>
+  Please review the application and approve or reject it through the admin dashboard. The candidate
+  will not be eligible to participate in the election until their application is approved.
+</p>
+
+<p>
+  To approve or reject the application, please log in to your admin dashboard at:
+  <a href="<%= adminDashboardUrl %>"><%= adminDashboardUrl %></a>
+</p>
+
+<p>
+  If you have any questions, feel free to reach out to us at
+  <a href="mailto:<%= supportEmail %>"><%= supportEmail %></a>.
+</p>
+
+<p>Best regards,</p>
+<p>The <%= websiteName %> Team</p>
+<%- include('../partials/footer', { 
+    websiteDomain: 'localhost:com', 
+    currentYear: new Date().getFullYear(), 
+    websiteName: 'E-Voting',
+    supportEmail: 'support@evoting.com',
+  }) %>
+  

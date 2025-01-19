@@ -34,7 +34,7 @@ export const verifyToken = async (req, res, next) => {
 };
 
 export const isUser = async (req, res, next) => {
-  if (req.user.role !== 'user') {
+  if (req.user.role !== 'voter') {
     next(
       new AppError(
         {
@@ -50,36 +50,6 @@ export const isUser = async (req, res, next) => {
 
 export const isAdmin = async (req, res, next) => {
   if (req.user.role !== 'admin') {
-    next(
-      new AppError(
-        {
-          message: 'You are not authorized to perform this action',
-        },
-        UN_AUTHORIZED
-      )
-    );
-  }
-
-  return next();
-};
-
-export const isStaff = async (req, res, next) => {
-  if (req.user.role !== 'staff') {
-    next(
-      new AppError(
-        {
-          message: 'You are not authorized to perform this action',
-        },
-        UN_AUTHORIZED
-      )
-    );
-  }
-
-  return next();
-};
-
-export const isOwner = async (req, res, next) => {
-  if (req.user.role !== 'owner') {
     next(
       new AppError(
         {

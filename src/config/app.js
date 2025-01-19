@@ -13,6 +13,7 @@ import authRoutes from '../routes/auth.routes.js';
 import adminRoutes from '../routes/user.routes.js';
 import collegeRoutes from '../routes/college.routes.js';
 import verifyRoutes from '../routes/verify.routes.js';
+import electionRoutes from '../routes/election.routes.js';
 const app = express();
 
 app.use(helmet());
@@ -45,5 +46,6 @@ app.use('/api/v1/auth', authRoutes);
 app.use('/api/v1/admin', adminRoutes);
 app.use('/api/v1/college', collegeRoutes);
 app.use('/api/v1/verify', verifyRoutes);
+app.use('/api/v1/election', electionRoutes);
 
 export default app;

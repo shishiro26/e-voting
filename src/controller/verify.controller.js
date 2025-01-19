@@ -13,6 +13,7 @@ import { generatePassword } from '../utils/user.js';
 import { verifyEmailSchema } from '../validations/auth.validation.js';
 import env from '../config/env.js';
 import prisma from '../config/db.js';
+import logger from '../config/logger.js';
 
 export const verifyEmail = async (req, res, next) => {
   try {
@@ -35,7 +36,7 @@ export const verifyEmail = async (req, res, next) => {
       return res.redirect('https://shishiro.pages.dev');
     }
   } catch (error) {
-    console.log('error', error);
+    logger.error('Error while verifying the email', error);
     return next(new AppError('Something went wrong', INTERNAL_SERVER));
   }
 };
@@ -84,10 +85,6 @@ export const verifyCollegeEmail = async (req, res, next) => {
             is_verified: true,
           },
         });
-
-        console.log('college.name', college.name);
-        console.log('email', email);
-        console.log('url', url);
 
         const html = await renderEmailEjs('emails/create-user', {
           name: `${college.name}`,
