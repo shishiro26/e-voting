@@ -11,7 +11,6 @@ import {
   saveUser,
   getUserByEmail,
   removeVerifyToken,
-  removeEmailVerifyToken,
   updateUserById,
 } from '../services/auth.services.js';
 import {
@@ -58,6 +57,7 @@ export const createUser = async (req, res, next) => {
       password: hashedPassword,
       email_verify_token: verify_token,
       token_send_at: new Date().toISOString(),
+      college_id: college.id,
     };
 
     saveUser(user)

@@ -42,8 +42,8 @@ model user {
   password_reset_token String?         @db.VarChar(255)
   token_send_at        DateTime?
   refresh_token        refresh_token[]
+  college_id           Int
   college              college?        @relation(fields: [college_id], references: [id])
-  college_id           Int?
 
   @@index([email], name: "email")
   @@map("users")

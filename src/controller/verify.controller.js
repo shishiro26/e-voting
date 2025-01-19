@@ -6,11 +6,7 @@ import {
   removeVerifyToken,
   saveUser,
 } from '../services/auth.services.js';
-import {
-  getCollegeByEmail,
-  removeCollegeToken,
-  removeCollegeVerifyToken,
-} from '../services/college.services.js';
+import { getCollegeByEmail, removeCollegeToken } from '../services/college.services.js';
 import AppError from '../utils/AppError.js';
 import { checkTimeDifference, generateId, renderEmailEjs } from '../utils/helper.js';
 import { generatePassword } from '../utils/user.js';
@@ -48,7 +44,10 @@ export const verifyCollegeEmail = async (req, res, next) => {
   try {
     const { email, token } = verifyEmailSchema.parse(req.query);
 
-    const college = await getCollegeByEmail(email, 'id email email_verify_token token_send_at');
+    const college = await getCollegeByEmail(
+      email,
+      'id name email email_verify_token token_send_at'
+    );
     const token_gap = checkTimeDifference(college.token_send_at);
 
     if (token_gap > 86400000) {
@@ -81,8 +80,14 @@ export const verifyCollegeEmail = async (req, res, next) => {
             role: 'admin',
             email_verify_token: verify_token,
             token_send_at: new Date().toISOString(),
+            college_id: college.id,
+            is_verified: true,
           },
         });
+
+        console.log('college.name', college.name);
+        console.log('email', email);
+        console.log('url', url);
 
         const html = await renderEmailEjs('emails/create-user', {
           name: `${college.name}`,
@@ -91,7 +96,7 @@ export const verifyCollegeEmail = async (req, res, next) => {
 
         await emailQueue.add(emailQueueName, {
           to: email,
-          subject: 'Verify your email address - E-voting',
+          subject: 'Create you admin account - E-voting',
           html: html,
         });
 
