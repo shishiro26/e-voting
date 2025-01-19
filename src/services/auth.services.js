@@ -85,7 +85,7 @@ export const findUserByRefreshToken = async (id, refreshToken) => {
 };
 
 export const removeRefreshTokensUser = async (id) => {
-  await prisma.refreshToken.deleteMany({
+  await prisma.refresh_token.deleteMany({
     where: { user_id: id },
   });
 
@@ -120,14 +120,14 @@ export const replaceRefreshTokenUser = async (id, oldRefreshToken, newRefreshTok
 };
 
 export const removeRefreshTokenUser = async (id, refreshToken) => {
-  const tokenToDelete = await prisma.refreshToken.findFirst({
+  const tokenToDelete = await prisma.refresh_token.findFirst({
     where: {
       user_id: id,
       refresh_token: refreshToken,
     },
   });
 
-  await prisma.refreshToken.delete({
+  await prisma.refresh_token.delete({
     where: {
       id: tokenToDelete.id,
     },

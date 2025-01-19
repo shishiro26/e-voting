@@ -10,10 +10,16 @@ import {
   replaceRefreshTokenUser,
   saveUser,
   getUserByEmail,
-  removeEmailVerifyToken,
   removeVerifyToken,
+  removeEmailVerifyToken,
+  updateUserById,
 } from '../services/auth.services.js';
-import { loginSchema, registerSchema, verifyEmailSchema } from '../validations/auth.validation.js';
+import {
+  adminSchema,
+  loginSchema,
+  registerSchema,
+  verifyEmailSchema,
+} from '../validations/auth.validation.js';
 import { checkTimeDifference, formatError, generateId, renderEmailEjs } from '../utils/helper.js';
 import { emailQueue, emailQueueName } from '../jobs/email.queue.js';
 import { getCollegeByName } from '../services/college.services.js';
@@ -42,7 +48,7 @@ export const createUser = async (req, res, next) => {
     const hashedPassword = await generatePassword(password);
     const id = generateId();
     const verify_token = await generatePassword(id);
-    const url = `${env.base_url}/api/v1/auth/verify/email/?email=${email}&token=${verify_token}`;
+    const url = `${env.base_url}/api/v1/verify/email/?email=${email}&token=${verify_token}`;
 
     const user = {
       first_name,
@@ -62,7 +68,7 @@ export const createUser = async (req, res, next) => {
         });
         await emailQueue.add(emailQueueName, {
           to: email,
-          subject: 'Verify your email address - Route Reserve',
+          subject: 'Verify your email address - E-voting',
           html: html,
         });
         return res.status(201).send({
@@ -185,6 +191,64 @@ export const refreshTokenSets = async (req, res, next) => {
   }
 };
 
+export const createAdmin = async (req, res, next) => {
+  try {
+    const { email, token } = verifyEmailSchema.parse(req.query);
+    const user = await getUserByEmail(email, 'id email email_verify_token token_send_at');
+
+    const token_gap = checkTimeDifference(user.token_send_at);
+    if (token_gap > 86400000) {
+      await removeVerifyToken(user.id);
+      return next(new AppError('Token expired', BAD_REQUEST));
+    }
+
+    if (user) {
+      if (token !== user.email_verify_token) {
+        return next(new AppError('Invalid Token', BAD_REQUEST));
+      }
+      const { first_name, last_name, password } = adminSchema.parse(req.body);
+      const hashedPassword = await generatePassword(password);
+
+      const updatedUser = await updateUserById(user.id, {
+        first_name,
+        last_name,
+        password: hashedPassword,
+        email_verify_token: null,
+        token_send_at: null,
+      });
+
+      if (updatedUser) {
+        const { accessToken, refreshToken } = generateTokenSet({
+          id: updatedUser.id,
+          email: updatedUser.email,
+          role: updatedUser.role,
+        });
+
+        await assignRefreshToken(updatedUser.id, refreshToken);
+
+        res.cookie('accessToken', accessToken, {
+          maxAge: env.jwt.accessExpirationMinutes * 60 * 1000,
+          secure: env.env === 'PRODUCTION' ? true : false,
+          httpOnly: true,
+          samesite: 'none',
+        });
+
+        res.cookie('refreshToken', refreshToken, {
+          maxAge: env.jwt.refreshExpirationDays * 24 * 60 * 60 * 1000,
+          secure: env.env === 'PRODUCTION' ? true : false,
+          httpOnly: true,
+          samesite: 'none',
+        });
+
+        return res.sendStatus(201);
+      }
+    }
+  } catch (error) {
+    console.log('error', error);
+    return next(new AppError('Something went wrong', INTERNAL_SERVER));
+  }
+};
+
 export const logOut = async (req, res, next) => {
   try {
     res.clearCookie('accessToken');
@@ -206,31 +270,5 @@ export const logOut = async (req, res, next) => {
     return res.sendStatus(204);
   } catch (error) {
     return handleRefreshTokenError(error, req, res, next);
-  }
-};
-
-export const verifyEmail = async (req, res, next) => {
-  try {
-    const { email, token } = verifyEmailSchema.parse(req.query);
-    const user = await getUserByEmail(email, 'id email email_verify_token token_send_at');
-    const token_gap = checkTimeDifference(user.token_send_at);
-
-    if (token_gap > 86400000) {
-      await removeVerifyToken(user.id);
-      return next(new AppError('Token expired', BAD_REQUEST));
-    }
-
-    if (user) {
-      if (token !== user.email_verify_token) {
-        return next(new AppError('Invalid Token', BAD_REQUEST));
-      }
-
-      await removeEmailVerifyToken(user.id, token);
-
-      return res.sendStatus(200);
-    }
-  } catch (error) {
-    console.log('error', error);
-    return next(new AppError('Something went wrong', INTERNAL_SERVER));
   }
 };

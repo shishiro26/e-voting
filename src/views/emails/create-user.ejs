@@ -1,0 +1,26 @@
+<%- include('../partials/header', { websiteName: 'E-Voting' }) %>
+
+<h2>Hello, <%= name %>!</h2>
+
+<p>Welcome to E-Voting! We're excited to have you as the admin for your college on our platform.</p>
+
+<p>You have successfully verified your email, but it looks like you haven't yet created your admin account. By clicking the link below, you will become the official admin of your college, enabling you to oversee elections and manage election activities. If you did not create an admin account or received this email by mistake, please ignore it, and no further action will be required.</p>
+
+<a href="<%= url %>" target="_blank" style="display: inline-block; background-color: #007BFF; color: white; padding: 10px 20px; text-decoration: none; border-radius: 5px;">Create Your Admin Account</a>
+
+<p>Once you've completed the setup, you will have full access to your admin privileges, which include:</p>
+<ul>
+  <li>Creating and managing election events</li>
+  <li>Monitoring voting progress and results</li>
+  <li>Managing user registrations and roles</li>
+  <li>Accessing detailed analytics and reports</li>
+</ul>
+
+<p>If you encounter any issues or need assistance, feel free to <a href="mailto:support@evoting.com">contact our support team</a>.</p>
+
+<%- include('../partials/footer', { 
+  websiteDomain: 'localhost:com', 
+  currentYear: new Date().getFullYear(), 
+  websiteName: 'E-Voting',
+  supportEmail: 'support@evoting.com',
+}) %>
