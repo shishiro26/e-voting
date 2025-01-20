@@ -1,4 +1,4 @@
-<%- include('../partials/header', { websiteName: 'E-Voting' }) %>
+<%- include('../../partials/header', { websiteName: 'E-Voting' }) %>
 <h2>Hello Admin,</h2>
 <p>
   You have a pending candidate application that requires your approval for the upcoming election.
@@ -25,8 +25,8 @@
 </p>
 
 <p>Best regards,</p>
-<p>The <%= websiteName %> Team</p>
-<%- include('../partials/footer', { 
+<p>The E-voting Team</p>
+<%- include('../../partials/footer', { 
     websiteDomain: 'localhost:com', 
     currentYear: new Date().getFullYear(), 
     websiteName: 'E-Voting',

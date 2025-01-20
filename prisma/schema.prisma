@@ -90,7 +90,7 @@ model Candidate {
   created_at  DateTime @default(now())
   updated_at  DateTime @updatedAt
   user_id     Int
-  approved    status  @default(pending)
+  status      status   @default(pending)
   tagline     String   @db.VarChar(255)
   image       String?  @db.VarChar(255)
   user        user     @relation(fields: [user_id], references: [id])

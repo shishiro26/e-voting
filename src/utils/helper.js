@@ -17,6 +17,7 @@ export const generateId = () => {
 
 export const renderEmailEjs = async (fileName, payload) => {
   const __dirname = path.dirname(fileURLToPath(import.meta.url));
+  console.log('__dirname', __dirname);
   const html = await ejs.renderFile(path.join(__dirname, `../views/${fileName}.ejs`), payload);
   return html;
 };

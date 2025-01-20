@@ -1,16 +1,16 @@
-<%- include('../partials/header', { websiteName: 'E-Voting' }) %>
+<%- include('../../partials/header', { websiteName: 'E-Voting' }) %>
 
     <h2>Congratulations <%= candidateName %> 🥳🥳🥳 ,</h2>
     <p>We are excited to inform you that your application to run for election has been approved!</p>
-    <p>You are now an official candidate in the upcoming <%= websiteName %> election. The election will start on <%= startDate %> and end on <%= endDate %>.</p>
+    <p>You are now an official candidate in the upcoming E-voting election. The election will start on <%= startDate %> and end on <%= endDate %>.</p>
     
-    <p>If you have any questions or need assistance, feel free to contact us at <a href="mailto:<%= supportEmail %>"><%= supportEmail %></a>.</p>
+    <p>If you have any questions or need assistance, feel free to contact us at <a href="mailto:evoting@gmail.com">e-voting@gmail.com</a>.</p>
 
     <p>Best of luck in the election!</p>
 
     <p>Best regards,</p>
     <p>The E-voting Team</p>
-<%- include('../partials/footer', { 
+<%- include('../../partials/footer', { 
     websiteDomain: 'localhost:com', 
     currentYear: new Date().getFullYear(), 
     websiteName: 'E-Voting',

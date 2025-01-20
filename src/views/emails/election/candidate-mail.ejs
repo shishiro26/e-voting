@@ -1,4 +1,4 @@
-<%- include('../partials/header', { websiteName: 'E-Voting' }) %>
+<%- include('../../partials/header', { websiteName: 'E-Voting' }) %>
 <h2>Hello <%= candidateName %>,</h2>
     <p>Thank you for your interest in running for election in the upcoming E-voting election!</p>
     <p>We wanted to let you know that your application is currently pending approval by the election administrator. Once your application is approved, you will receive another email confirming your status as an official candidate.</p>
@@ -11,7 +11,7 @@
     <p>The E-voting Team</p>
   </div>
 
-  <%- include('../partials/footer', { 
+  <%- include('../../partials/footer', { 
     websiteDomain: 'localhost:com', 
     currentYear: new Date().getFullYear(), 
     websiteName: 'E-Voting',
