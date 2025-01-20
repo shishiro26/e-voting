@@ -11,6 +11,7 @@ import {
   getCandidateById,
   getCandidateByUserId,
   getElectionById,
+  queryCandidates,
   reject_candidate,
   saveCandidate,
   saveElection,
@@ -238,6 +239,38 @@ export const rejectCandidate = async (req, res, next) => {
       return next(new AppError(formattedError, BAD_REQUEST));
     }
     logger.error('Error in rejecting candidate', error);
+    return next(new AppError('Something went wrong', INTERNAL_SERVER));
+  }
+};
+
+export const getPendingCandidates = async (req, res, next) => {
+  try {
+    const { page = 1, limit = 10, sortBy } = req.query;
+    const { college_id } = req.user;
+    const options = {
+      page: parseInt(page, 10),
+      limit: parseInt(limit, 10),
+      sort: sortBy,
+    };
+
+    const filter = {
+      status: 'pending',
+      election: {
+        college_id,
+      },
+    };
+
+    const result = await queryCandidates(filter, options);
+
+    return res.status(200).send({
+      page: result.page,
+      limit: result.limit,
+      total: result.totalResults,
+      data: result.results,
+    });
+  } catch (error) {
+    console.log('I am in this error', error);
+    logger.error('Error in getting pending candidates', error);
     return next(new AppError('Something went wrong', INTERNAL_SERVER));
   }
 };

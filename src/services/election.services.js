@@ -1,4 +1,5 @@
 import prisma from '../config/db.js';
+import { paginate } from '../plugins/paginate.js';
 
 export const saveElection = async (payload) => {
   try {
@@ -76,4 +77,9 @@ export const getCandidateById = async (id, fields = '') => {
       : undefined,
   });
   return candidate;
+};
+
+export const queryCandidates = async (filter, options) => {
+  const candidates = paginate('candidate', filter, options);
+  return candidates;
 };
