@@ -1,0 +1,2 @@
+-- AlterTable
+ALTER TABLE `elections` ADD COLUMN `votes` INTEGER NOT NULL DEFAULT 0;

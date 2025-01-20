@@ -8,6 +8,7 @@ import {
 } from '../validations/election.validation.js';
 import {
   approve_candidate,
+  countApprovedCandidates,
   getCandidateById,
   getCandidateByUserId,
   getElectionById,
@@ -15,6 +16,7 @@ import {
   reject_candidate,
   saveCandidate,
   saveElection,
+  updateElection,
 } from '../services/election.services.js';
 import { getCollegeById } from '../services/college.services.js';
 import { getUserById } from '../services/auth.services.js';
@@ -25,7 +27,8 @@ import { emailQueue, emailQueueName } from '../jobs/email.queue.js';
 
 export const createElection = async (req, res, next) => {
   try {
-    const { title, description, start_date, end_date } = createElectionSchema.parse(req.body);
+    const { title, description, start_date, end_date, min_candidate, max_candidate } =
+      createElectionSchema.parse(req.body);
     const college_id = req.user.college_id;
 
     const college = await getCollegeById(college_id);
@@ -39,6 +42,8 @@ export const createElection = async (req, res, next) => {
       start_date: new Date(start_date),
       end_date: new Date(end_date),
       college_id,
+      min_candidate,
+      max_candidate,
     };
 
     saveElection(payload).then((election) => {
@@ -88,11 +93,11 @@ export const addCandidate = async (req, res, next) => {
       return next(new AppError('Election not found', NOT_FOUND));
     }
 
-    const currentDate = new Date().toLocaleDateString('en-In', { timeZone: 'Asia/Kolkata' });
-    const startDate = new Date(election.start_date).toLocaleDateString();
-    const endDate = new Date(election.end_date).toLocaleDateString();
+    const current_date = new Date().toLocaleString('sv-SE').replace(' ', 'T') + 'z';
+    const start_date = election.start_date;
+    const end_date = election.end_date;
 
-    if (startDate > currentDate || endDate < currentDate) {
+    if (current_date < start_date || current_date > end_date) {
       return next(new AppError('Election is not active', BAD_REQUEST));
     }
 
@@ -150,9 +155,16 @@ export const addCandidate = async (req, res, next) => {
 
 export const approveCandidate = async (req, res, next) => {
   try {
-    const { candidate_id } = approveCandidateSchema.parse(req.body);
+    const { candidate_id, election_id } = approveCandidateSchema.parse(req.body);
     const candidate = await getCandidateById(candidate_id, 'user_id status');
+    const election = await getElectionById(
+      election_id,
+      'start_date end_date active min_candidate max_candidate'
+    );
 
+    if (!election) {
+      return next(new AppError('Election not found', NOT_FOUND));
+    }
     if (!candidate) {
       return next(new AppError('Candidate not found', NOT_FOUND));
     }
@@ -164,8 +176,24 @@ export const approveCandidate = async (req, res, next) => {
     if (candidate.status === 'rejected') {
       return next(new AppError('Candidate already rejected', BAD_REQUEST));
     }
+    const candidates_count = await countApprovedCandidates(election_id);
 
+    if (candidates_count >= election.max_candidate) {
+      return next(new AppError('Maximum candidate limit reached', BAD_REQUEST));
+    }
     const approved = await approve_candidate(candidate_id);
+
+    if (!approved) {
+      return next(new AppError('Candidate not approved', BAD_REQUEST));
+    }
+
+    if (candidates_count + 1 >= election.min_candidate && !election.active) {
+      await updateElection(election_id, { active: true });
+    }
+
+    if (candidates_count >= 2 && !election.active) {
+      await updateElection(election_id, { active: true });
+    }
 
     if (!approved) {
       return next(new AppError('Candidate not approved', BAD_REQUEST));

@@ -40,14 +40,14 @@ export const updateUserById = async (id, payload) => {
   return updatedUser;
 };
 
-export const assignRefreshToken = async (id, refreshToken) => {
+export const assignRefreshToken = async (id, refresh_token) => {
   const updatedUser = await prisma.user.update({
     where: {
       id: id,
     },
     data: {
       refresh_token: {
-        create: { refresh_token: refreshToken },
+        create: { refresh_token: refresh_token },
       },
     },
     include: { refresh_token: true },
@@ -66,13 +66,13 @@ export const getSpecificDetailsUser = async (id, details) => {
   return userDetails;
 };
 
-export const findUserByRefreshToken = async (id, refreshToken) => {
+export const findUserByRefreshToken = async (id, refresh_token) => {
   const user = await prisma.user.findFirst({
     where: {
       id: id,
       refresh_token: {
         some: {
-          refresh_token: refreshToken,
+          refresh_token: refresh_token,
         },
       },
     },
@@ -119,11 +119,11 @@ export const replaceRefreshTokenUser = async (id, oldRefreshToken, newRefreshTok
   return updatedUser;
 };
 
-export const removeRefreshTokenUser = async (id, refreshToken) => {
+export const removeRefreshTokenUser = async (id, refresh_token) => {
   const tokenToDelete = await prisma.refresh_token.findFirst({
     where: {
       user_id: id,
-      refresh_token: refreshToken,
+      refresh_token: refresh_token,
     },
   });
 

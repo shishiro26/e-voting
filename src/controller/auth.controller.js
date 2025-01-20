@@ -103,23 +103,23 @@ export const loginUser = async (req, res, next) => {
       return next(new AppError('Email or Password is incorrect', BAD_REQUEST));
     }
 
-    const { accessToken, refreshToken } = generateTokenSet({
+    const { access_token, refresh_token } = generateTokenSet({
       id: user.id,
       email: user.email,
       role: user.role,
       college_id: user.college_id,
     });
 
-    await assignRefreshToken(user.id, refreshToken);
+    await assignRefreshToken(user.id, refresh_token);
 
-    res.cookie('accessToken', accessToken, {
+    res.cookie('access_token', access_token, {
       maxAge: env.jwt.accessExpirationMinutes * 60 * 1000,
       secure: env.env === 'PRODUCTION' ? true : false,
       httpOnly: true,
       samesite: 'none',
     });
 
-    res.cookie('refreshToken', refreshToken, {
+    res.cookie('refresh_token', refresh_token, {
       maxAge: env.jwt.refreshExpirationDays * 24 * 60 * 60 * 1000,
       secure: env.env === 'PRODUCTION' ? true : false,
       httpOnly: true,
@@ -135,17 +135,17 @@ export const loginUser = async (req, res, next) => {
 
 export const refreshTokenSets = async (req, res, next) => {
   try {
-    const { refreshToken } = req.cookies;
+    const { refresh_token } = req.cookies;
 
-    if (!refreshToken) {
-      res.clearCookie('refreshToken');
+    if (!refresh_token) {
+      res.clearCookie('refresh_token');
       return next(new AppError('No refresh token found', UN_AUTHORIZED));
     }
 
-    const decodedUser = await extractUser(refreshToken, env.jwt.refresh_secret);
+    const decodedUser = await extractUser(refresh_token, env.jwt.refresh_secret);
     req.user = decodedUser;
 
-    const isHacker = await refreshTokenReuseDetection(decodedUser, refreshToken, res, next);
+    const isHacker = await refreshTokenReuseDetection(decodedUser, refresh_token, res, next);
     if (isHacker) {
       return next(new AppError('Potential breach detected', UN_AUTHORIZED));
     }
@@ -159,19 +159,19 @@ export const refreshTokenSets = async (req, res, next) => {
 
     const updatedRefreshToken = await replaceRefreshTokenUser(
       decodedUser.id,
-      refreshToken,
-      tokenSet.refreshToken
+      refresh_token,
+      tokenSet.refresh_token
     );
 
     if (updatedRefreshToken) {
-      res.cookie('accessToken', tokenSet.accessToken, {
+      res.cookie('access_token', tokenSet.access_token, {
         maxAge: env.jwt.accessExpirationMinutes * 60 * 1000,
         secure: env.env === 'PRODUCTION' ? true : false,
         httpOnly: true,
         samesite: 'none',
       });
 
-      res.cookie('refreshToken', tokenSet.refreshToken, {
+      res.cookie('refresh_token', tokenSet.refresh_token, {
         maxAge: env.jwt.refreshExpirationDays * 24 * 60 * 60 * 1000,
         secure: env.env === 'PRODUCTION' ? true : false,
         httpOnly: true,
@@ -213,23 +213,23 @@ export const createAdmin = async (req, res, next) => {
       });
 
       if (updatedUser) {
-        const { accessToken, refreshToken } = generateTokenSet({
+        const { access_token, refresh_token } = generateTokenSet({
           id: updatedUser.id,
           email: updatedUser.email,
           role: updatedUser.role,
           college_id: updatedUser.college_id,
         });
 
-        await assignRefreshToken(updatedUser.id, refreshToken);
+        await assignRefreshToken(updatedUser.id, refresh_token);
 
-        res.cookie('accessToken', accessToken, {
+        res.cookie('access_token', access_token, {
           maxAge: env.jwt.accessExpirationMinutes * 60 * 1000,
           secure: env.env === 'PRODUCTION' ? true : false,
           httpOnly: true,
           samesite: 'none',
         });
 
-        res.cookie('refreshToken', refreshToken, {
+        res.cookie('refresh_token', refresh_token, {
           maxAge: env.jwt.refreshExpirationDays * 24 * 60 * 60 * 1000,
           secure: env.env === 'PRODUCTION' ? true : false,
           httpOnly: true,
@@ -248,22 +248,22 @@ export const createAdmin = async (req, res, next) => {
 
 export const logOut = async (req, res, next) => {
   try {
-    res.clearCookie('accessToken');
-    res.clearCookie('refreshToken');
-    const { refreshToken } = req.cookies;
+    res.clearCookie('access_token');
+    res.clearCookie('refresh_token');
+    const { refresh_token } = req.cookies;
 
-    if (!refreshToken) {
+    if (!refresh_token) {
       return next(new AppError('No Refresh Token Found', UN_AUTHORIZED));
     }
 
-    const decodedUser = await extractUser(refreshToken, env.jwt.refresh_secret);
+    const decodedUser = await extractUser(refresh_token, env.jwt.refresh_secret);
 
-    const isHacker = await refreshTokenReuseDetection(decodedUser, refreshToken, res);
+    const isHacker = await refreshTokenReuseDetection(decodedUser, refresh_token, res);
     if (isHacker) {
       return next(new AppError('Potential breach detected', UN_AUTHORIZED));
     }
 
-    await removeRefreshTokenUser(decodedUser.id, refreshToken);
+    await removeRefreshTokenUser(decodedUser.id, refresh_token);
     return res.sendStatus(204);
   } catch (error) {
     return handleRefreshTokenError(error, req, res, next);

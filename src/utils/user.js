@@ -3,16 +3,16 @@ import env from '../config/env.js';
 import bcrypt from 'bcrypt';
 
 export const generateTokenSet = (userInfo) => {
-  const accessToken = jwt.sign(userInfo, env.jwt.access_secret, {
+  const access_token = jwt.sign(userInfo, env.jwt.access_secret, {
     expiresIn: `${env.jwt.accessExpirationMinutes}m`,
   });
-  const refreshToken = jwt.sign(userInfo, env.jwt.refresh_secret, {
+  const refresh_token = jwt.sign(userInfo, env.jwt.refresh_secret, {
     expiresIn: `${env.jwt.refreshExpirationDays}d`,
   });
 
   return {
-    accessToken,
-    refreshToken,
+    access_token,
+    refresh_token,
   };
 };
 

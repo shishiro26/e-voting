@@ -50,10 +50,11 @@ model user {
   token_send_at        DateTime?
   refresh_token        refresh_token[]
   college_id           Int
-  college              college?        @relation(fields: [college_id], references: [id])
-  Vote                 Vote[]
+  college              college         @relation(fields: [college_id], references: [id], onDelete: Cascade)
   Candidate            Candidate[]
+  Vote                 Vote[]
 
+  @@unique([email, college_id], name: "email_college_id")
   @@index([email], name: "email")
   @@map("users")
 }
@@ -63,24 +64,27 @@ model refresh_token {
   refresh_token String   @db.VarChar(1024)
   created_at    DateTime @default(now())
   updated_at    DateTime @updatedAt
-  user          user?    @relation(fields: [user_id], references: [id])
+  user          user?    @relation(fields: [user_id], references: [id], onDelete: Cascade)
   user_id       Int?
 
   @@map("refresh_token")
 }
 
 model Election {
-  id          Int         @id @default(autoincrement())
-  title       String      @db.VarChar(255)
-  created_at  DateTime    @default(now())
-  updated_at  DateTime    @updatedAt
-  description String      @db.Text
-  start_date  DateTime
-  end_date    DateTime
-  college_id  Int
-  college     college     @relation(fields: [college_id], references: [id])
-  Vote        Vote[]
-  Candidate   Candidate[]
+  id            Int         @id @default(autoincrement())
+  title         String      @db.VarChar(255)
+  created_at    DateTime    @default(now())
+  updated_at    DateTime    @updatedAt
+  description   String      @db.Text
+  active        Boolean     @default(false)
+  min_candidate Int         @default(2)
+  max_candidate Int         @default(2)
+  start_date    DateTime
+  end_date      DateTime
+  college_id    Int
+  college       college     @relation(fields: [college_id], references: [id], onDelete: Cascade)
+  Vote          Vote[]
+  candidate     Candidate[]
 
   @@map("elections")
 }
@@ -93,17 +97,26 @@ model Candidate {
   status      status   @default(pending)
   tagline     String   @db.VarChar(255)
   image       String?  @db.VarChar(255)
-  user        user     @relation(fields: [user_id], references: [id])
+  user        user     @relation(fields: [user_id], references: [id], onDelete: Cascade)
   election_id Int
-  election    Election @relation(fields: [election_id], references: [id])
+  election    Election @relation(fields: [election_id], references: [id], onDelete: Cascade)
+  Vote        Vote[]
+  votes       Int      @default(0)
+
+  @@map("candidates")
 }
 
 model Vote {
-  id          Int      @id @default(autoincrement())
-  created_at  DateTime @default(now())
-  updated_at  DateTime @updatedAt
-  user_id     Int
-  user        user     @relation(fields: [user_id], references: [id])
-  election_id Int
-  election    Election @relation(fields: [election_id], references: [id])
+  id           Int       @id @default(autoincrement())
+  created_at   DateTime  @default(now())
+  updated_at   DateTime  @updatedAt
+  user_id      Int
+  candidate_id Int
+  election_id  Int
+  user         user      @relation(fields: [user_id], references: [id], onDelete: Cascade)
+  candidate    Candidate @relation(fields: [candidate_id], references: [id], onDelete: Cascade)
+  election     Election  @relation(fields: [election_id], references: [id], onDelete: Cascade)
+
+  @@unique([user_id, election_id], name: "user_id_election_id")
+  @@map("votes")
 }

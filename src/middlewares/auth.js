@@ -4,7 +4,7 @@ import AppError from '../utils/AppError.js';
 import { extractUser } from '../utils/user.js';
 
 export const verifyToken = async (req, res, next) => {
-  const token = req.cookies.accessToken;
+  const token = req.cookies.access_token;
   if (!token) {
     next(
       new AppError(

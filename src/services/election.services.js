@@ -13,6 +13,18 @@ export const saveElection = async (payload) => {
   }
 };
 
+export const updateElection = async (id, payload) => {
+  try {
+    const election = await prisma.election.update({
+      where: { id: id },
+      data: payload,
+    });
+    return election;
+  } catch (error) {
+    return error;
+  }
+};
+
 export const getElectionById = async (id, fields = '') => {
   const election = await prisma.election.findUnique({
     where: { id: id },
@@ -79,7 +91,24 @@ export const getCandidateById = async (id, fields = '') => {
   return candidate;
 };
 
+export const countApprovedCandidates = async (election_id) => {
+  const candidateCount = await prisma.candidate.count({
+    where: {
+      election_id: election_id,
+      status: 'approved',
+    },
+  });
+  return candidateCount;
+};
+
 export const queryCandidates = async (filter, options) => {
   const candidates = paginate('candidate', filter, options);
   return candidates;
+};
+
+export const getVoteByUserIdAndElectionId = async (user_id, election_id) => {
+  const vote = await prisma.vote.findFirst({
+    where: { user_id: user_id, election_id: election_id },
+  });
+  return vote;
 };

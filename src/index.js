@@ -3,6 +3,8 @@ import app from './config/app.js';
 import env from './config/env.js';
 import logger from './config/logger.js';
 import prisma from './config/db.js';
+import { verifySocketToken } from './middlewares/socket.js';
+import { setupSocket } from './config/socket.js';
 
 let server = null;
 let io = null;
@@ -18,9 +20,13 @@ const startServer = async () => {
 
     io = new Server(server, {
       cors: {
-        origin: '*',
+        origin: 'http://localhost:5173',
+        credentials: true,
       },
     });
+
+    io.use(verifySocketToken);
+    setupSocket(io);
 
     logger.info('Socket.io server started');
   } catch (err) {

@@ -1,3 +1,4 @@
+import { max } from 'date-fns';
 import * as z from 'zod';
 
 export const createElectionSchema = z
@@ -31,6 +32,8 @@ export const createElectionSchema = z
         invalid_type_error: 'End date must be a valid date',
       })
       .datetime(),
+    min_candidate: z.number().int().min(2),
+    max_candidate: z.number().int().min(2),
   })
   .refine((data) => {
     const startDate = new Date(data.start_date).toISOString();
@@ -45,6 +48,10 @@ export const createElectionSchema = z
       throw new Error('Start date must be greater than current date');
     }
 
+    if (data.min_candidate > data.max_candidate) {
+      throw new Error('Minimum candidate must be less than maximum candidate');
+    }
+
     return true;
   });
 
@@ -55,6 +62,7 @@ export const addCandidateSchema = z.object({
 
 export const approveCandidateSchema = z.object({
   candidate_id: z.number().int(),
+  election_id: z.number().int(),
 });
 
 export const rejectCandidateSchema = z.object({
