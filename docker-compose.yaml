@@ -1,0 +1,53 @@
+version: "3.8"
+
+services:
+  mysql:
+    image: mysql:latest
+    restart: always
+    env_file:
+      - .env
+    environment:
+      - MYSQL_ROOT_PASSWORD=${MYSQL_ROOT_PASSWORD}
+      - MYSQL_DATABASE=${MYSQL_DATABASE}
+      - MYSQL_USER=${MYSQL_USER}
+      - MYSQL_PASSWORD=${MYSQL_PASSWORD}
+    ports:
+      - "${MYSQL_PORT}:3306"
+    volumes:
+      - db-data:/var/lib/mysql
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost"]
+      interval: 1m30s
+      timeout: 30s
+      retries: 5
+      start_period: 30s
+
+  redis-stack:
+    image: redis/redis-stack:latest
+    restart: always
+    ports:
+      - "${REDIS_PORT}:6379"
+      - "8001:8001"
+    volumes:
+      - redis-stack:/data
+
+  app:
+    depends_on:
+      mysql:
+        condition: service_healthy
+      redis-stack:
+        condition: service_started
+    build: .
+    env_file:
+      - .env
+    restart: on-failure
+    ports:
+      - "3000:3000"
+    volumes:
+      - .:/usr/src/app
+    stdin_open: true
+    tty: true
+
+volumes:
+  db-data:
+  redis-stack:
