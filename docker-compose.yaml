@@ -1,4 +1,4 @@
-version: "3.8"
+version: '3.8'
 
 services:
   mysql:
@@ -11,12 +11,13 @@ services:
       - MYSQL_DATABASE=${MYSQL_DATABASE}
       - MYSQL_USER=${MYSQL_USER}
       - MYSQL_PASSWORD=${MYSQL_PASSWORD}
+      - MYSQL_AUTHENTICATION_PLUGIN = caching_sha2_password  
     ports:
-      - "${MYSQL_PORT}:3306"
+      - '3307:3306'
     volumes:
       - db-data:/var/lib/mysql
     healthcheck:
-      test: ["CMD", "mysqladmin", "ping", "-h", "localhost"]
+      test: ['CMD', 'mysqladmin', 'ping', '-h', '127.0.0.1']
       interval: 1m30s
       timeout: 30s
       retries: 5
@@ -25,26 +26,35 @@ services:
   redis-stack:
     image: redis/redis-stack:latest
     restart: always
+    env_file:
+      - .env
     ports:
-      - "${REDIS_PORT}:6379"
-      - "8001:8001"
+      - '${REDIS_PORT}:6379'
+      - '8001:8001'
     volumes:
       - redis-stack:/data
+    healthcheck:
+      test: ['CMD', 'redis-cli', 'ping']
+      interval: 1m
+      timeout: 10s
+      retries: 5
 
   app:
     depends_on:
       mysql:
         condition: service_healthy
       redis-stack:
-        condition: service_started
+        condition: service_healthy
     build: .
     env_file:
       - .env
+    command: ["sh", "-c", "echo 'Database URL: $DATABASE_URL'"]
     restart: on-failure
     ports:
-      - "3000:3000"
+      - '3000:3000'
     volumes:
       - .:/usr/src/app
+      - /usr/src/app/node_modules
     stdin_open: true
     tty: true
 
