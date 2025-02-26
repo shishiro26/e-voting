@@ -16,7 +16,7 @@ services:
       - ./docker/init-db.sql:/docker-entrypoint-initdb.d/init-db.sql
     healthcheck:
       test: ['CMD', 'mysqladmin', 'ping', '-h', '127.0.0.1']
-      interval: 1m30s
+      interval: 90s
       timeout: 30s
       retries: 5
       start_period: 30s
@@ -53,7 +53,6 @@ services:
       - .:/usr/src/app
     stdin_open: true
     tty: true
-
 volumes:
   db-data:
   redis-stack:
