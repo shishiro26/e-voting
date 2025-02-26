@@ -1,6 +1,6 @@
 import jwt from 'jsonwebtoken';
 import env from '../config/env.js';
-import bcrypt from 'bcrypt';
+import bcrypt from 'bcryptjs';
 
 export const generateTokenSet = (userInfo) => {
   const access_token = jwt.sign(userInfo, env.jwt.access_secret, {

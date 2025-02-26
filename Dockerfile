@@ -10,8 +10,6 @@ RUN --mount=type=cache,target=/usr/src/app/.npm \
 COPY prisma ./prisma
 COPY . .
 
-RUN npx prisma generate
-
 FROM node:${NODE_VERSION}-alpine AS runner
 WORKDIR /usr/src/app
 
@@ -19,9 +17,9 @@ WORKDIR /usr/src/app
 COPY --from=builder /usr/src/app .
 
 # Add and prepare the entrypoint script
-COPY entrypoint.sh /usr/src/app/entrypoint.sh
-RUN chmod +x /usr/src/app/entrypoint.sh
+COPY docker/entrypoint.sh /usr/src/app/docker/entrypoint.sh
+RUN chmod +x /usr/src/app/docker/entrypoint.sh
 
 EXPOSE 3000
 
-ENTRYPOINT [ "/usr/src/app/entrypoint.sh" ]
+ENTRYPOINT [ "/usr/src/app/docker/entrypoint.sh" ]

@@ -1,7 +1,7 @@
 #!/bin/sh
 set -e
 
-echo "Database:URL $DATABASE_URL"
+npx prisma generate
 
 if [ "$NODE_ENV" = "production" ]; then
   exec npm run start
