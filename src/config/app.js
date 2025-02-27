@@ -3,6 +3,7 @@ import express from 'express';
 import helmet from 'helmet';
 import morgan from 'morgan';
 import cookieParser from 'cookie-parser';
+import process from 'process';
 
 import { fileURLToPath } from 'url';
 import * as path from 'path';
@@ -35,6 +36,22 @@ app.set('views', path.resolve(__dirname, '../views'));
 
 app.get('/', (req, res) => {
   return res.render('home');
+});
+
+app.get('/health', (_req, res, _next) => {
+  const healthCheck = {
+    uptime: process.uptime(),
+    responsetime:process.hrtime(),
+    message: 'OK',
+    timeStamp: Date.now(),
+  };
+
+  try {
+    res.send(healthCheck);
+  } catch (e) {
+    healthCheck.message = e;
+    res.status(503).send();
+  }
 });
 
 app.use((req, res, next) => {
