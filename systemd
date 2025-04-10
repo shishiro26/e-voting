@@ -1,0 +1,16 @@
+[Unit]
+Description=E-voting application
+After=network.target multi-user.target
+
+[Service]
+User=ubuntu
+WorkingDirectory=/home/ubuntu/e-voting
+ExecStart=/usr/bin/env bash -c 'source /etc/voting.env && exec npm start'
+Restart=always
+EnvironmentFile=-/etc/voting.env
+StandardOutput=journal
+StandardError=journal
+SyslogIdentifier=voting
+
+[Install]
+WantedBy=multi-user.target
